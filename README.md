@@ -1,16 +1,43 @@
-# CleanTrack CRM
+# CleanTrack CRM (Oddiy PHP talqini)
 
-Yengil vaznli, to'liq PHP (Composer-siz) asosida yozilgan tozalash xizmati CRM tizimi. Ma'lumotlar bazasi sifatida SQLite (PDO) ishlatiladi, foydalanuvchi interfeysi Tailwind CSS bilan qurilgan.
+Bu loyiha toza PHP 8 va SQLite asosida ishlaydi. Hech qanday framework yoki composer kutubxonalari talab qilinmaydi. Tailwind CSS fayli `public/assets/css/tailwind.css` orqali ulangan.
 
-## Talablar
-- PHP 8.2 (PDO SQLite kengaytmasi yoqilgan)
+## Ishga tushirish
 
-## O'rnatish
-```bash
-cp .env.example .env
-php scripts/migrate.php
-php scripts/seed.php
-php -S localhost:8000 -t public
+1. Loyihani serveringizdagi `public_html/cleaning` papkasiga joylashtiring.
+2. PHP 8 va SQLite kengaytmasi yoqilganiga ishonch hosil qiling.
+3. Brauzerda `https://domeningiz/public_html/cleaning/index.php` manzilini oching.
+4. Dastlabki login maʼlumotlari: `admin@example.com` / `parol123`.
+5. Birinchi kirish paytida SQLite bazasi avtomatik ravishda yaratiladi.
+
+## Asosiy imkoniyatlar
+
+- Mijozlarni qoʻshish va ularni roʻyxatda koʻrish
+- Buyurtmalar yaratish, umumiy summani avtomatik hisoblash
+- Toʻlovni buyurtma bilan birga qayd etish
+- Bosh sahifada asosiy statistikalar: bugungi ishlar, mijozlar soni, buyurtma va toʻlovlar yigʻindisi
+
+## Fayl tuzilmasi
+
+```
+public_html/cleaning/
+├── public/
+│   ├── assets/
+│   │   └── css/
+│   │       └── tailwind.css
+│   └── index.php
+├── database/
+│   └── cleantrack.sqlite   # avtomatik yaratiladi
+└── README.md
 ```
 
-Dastlabki kirish: `admin@cleantrack.test` / `password`.
+## Maʼlumotlar bazasi
+
+- `users` jadvali (standart foydalanuvchi avtomatik qoʻshiladi)
+- `clients` jadvali (mijozlar)
+- `orders` jadvali (buyurtmalar)
+- `payments` jadvali (qabul qilingan toʻlovlar)
+
+## Litsenziya
+
+Ushbu kodni oʻzgartirish va ichki loyihalarda foydalanish erkin.
