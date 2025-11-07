@@ -1,7 +1,7 @@
 <?php ob_start(); ?>
 <div class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h2 class="text-xl font-semibold text-gray-900">Payroll hisobi</h2>
+        <h2 class="text-xl font-semibold text-gray-900">Ish haqi hisobi</h2>
         <form method="GET" class="flex items-center gap-2">
             <input type="month" name="month" value="<?= htmlspecialchars($month, ENT_QUOTES) ?>" class="rounded border border-gray-300 px-3 py-2">
             <button class="rounded bg-gray-200 px-3 py-2 text-sm font-medium text-gray-700">Ko'rish</button>

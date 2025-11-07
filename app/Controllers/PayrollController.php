@@ -36,7 +36,7 @@ class PayrollController extends Controller
         $results = $service->compute($month, $persist);
 
         return $this->redirectWith('/payroll?month=' . urlencode($month), [
-            'success' => 'Payroll hisoblandi',
+            'success' => 'Ish haqi hisoblandi',
             'payroll_results' => $results,
         ]);
     }

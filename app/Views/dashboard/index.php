@@ -22,7 +22,7 @@
         <p class="mt-2 text-3xl font-semibold text-gray-900"><?= $metrics['completion_rate'] ?>%</p>
     </div>
     <div class="rounded bg-white p-4 shadow">
-        <p class="text-sm text-gray-500">Top cleaner (30 kun)</p>
+        <p class="text-sm text-gray-500">Eng yaxshi tozalovchi (30 kun)</p>
         <p class="mt-2 text-lg font-semibold text-gray-900"><?= htmlspecialchars($metrics['top_cleaner'] ?? '—', ENT_QUOTES) ?></p>
         <p class="text-sm text-gray-500">Buyurtmalar: <?= (int)$metrics['top_cleaner_jobs'] ?></p>
     </div>

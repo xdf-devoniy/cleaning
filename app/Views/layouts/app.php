@@ -13,10 +13,10 @@
         <div class="flex h-16 items-center justify-between">
             <div class="flex items-center space-x-6">
                 <span class="text-lg font-semibold text-sky-600">CleanTrack CRM</span>
-                <a href="/" class="text-sm font-medium text-gray-600 hover:text-gray-900">Dashboard</a>
+                <a href="/" class="text-sm font-medium text-gray-600 hover:text-gray-900">Boshqaruv paneli</a>
                 <a href="/clients" class="text-sm font-medium text-gray-600 hover:text-gray-900">Mijozlar</a>
                 <a href="/orders" class="text-sm font-medium text-gray-600 hover:text-gray-900">Buyurtmalar</a>
-                <a href="/payroll" class="text-sm font-medium text-gray-600 hover:text-gray-900">Payroll</a>
+                <a href="/payroll" class="text-sm font-medium text-gray-600 hover:text-gray-900">Ish haqi</a>
             </div>
             <div class="flex items-center space-x-3 text-sm text-gray-600">
                 <?php if (!empty($authUser)): ?>

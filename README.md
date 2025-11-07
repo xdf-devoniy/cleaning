@@ -1,11 +1,11 @@
 # CleanTrack CRM
 
-Lightweight cleaning service CRM built with PHP 8.2, SQLite and Tailwind CSS.
+Yengil vaznli, to'liq PHP (Composer-siz) asosida yozilgan tozalash xizmati CRM tizimi. Ma'lumotlar bazasi sifatida SQLite (PDO) ishlatiladi, foydalanuvchi interfeysi Tailwind CSS bilan qurilgan.
 
-## Requirements
-- PHP 8.2 with PDO SQLite extension
+## Talablar
+- PHP 8.2 (PDO SQLite kengaytmasi yoqilgan)
 
-## Setup
+## O'rnatish
 ```bash
 cp .env.example .env
 php scripts/migrate.php
@@ -13,4 +13,4 @@ php scripts/seed.php
 php -S localhost:8000 -t public
 ```
 
-Login with `admin@cleantrack.test` / `password`.
+Dastlabki kirish: `admin@cleantrack.test` / `password`.

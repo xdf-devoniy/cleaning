@@ -1,4 +1,16 @@
 <?php ob_start(); ?>
+<?php
+$statusLabels = [
+    'draft' => "Qoralama",
+    'scheduled' => "Rejalashtirilgan",
+    'in_progress' => "Jarayonda",
+    'completed' => "Tugallangan",
+    'paid' => "To'langan",
+    'cancelled' => "Bekor qilingan",
+    'issued' => "Yuborilgan",
+    'void' => "Bekor qilingan",
+];
+?>
 <div class="flex flex-col gap-6 lg:flex-row">
     <div class="lg:w-2/3 space-y-4">
         <div class="flex items-center justify-between">
@@ -18,7 +30,8 @@
                             </h3>
                             <p class="text-sm text-gray-500"><?= htmlspecialchars($order['address_label'], ENT_QUOTES) ?> · <?= date('d.m.Y H:i', strtotime($order['scheduled_at'])) ?></p>
                         </div>
-                        <span class="rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700 uppercase"><?= htmlspecialchars($order['status'], ENT_QUOTES) ?></span>
+                        <?php $statusKey = $order['status'] ?? 'draft'; ?>
+                        <span class="rounded-full bg-sky-50 px-3 py-1 text-sm font-semibold text-sky-700 uppercase"><?= htmlspecialchars($statusLabels[$statusKey] ?? $statusKey, ENT_QUOTES) ?></span>
                     </div>
                     <div class="mt-3 grid gap-3 sm:grid-cols-2">
                         <div>
@@ -53,9 +66,11 @@
                             <p class="font-semibold text-gray-900"><?= number_format(($order['payments_total'] ?? 0) / 100, 2) ?> UZS</p>
                         </div>
                         <div>
-                            <p class="text-xs uppercase text-gray-500">Invoice</p>
+                            <p class="text-xs uppercase text-gray-500">Hisob-faktura</p>
                             <?php if ($order['invoice']): ?>
-                                <span class="inline-flex rounded bg-emerald-50 px-2 py-1 text-emerald-700 text-xs font-semibold"><?= htmlspecialchars($order['invoice']['invoice_no'], ENT_QUOTES) ?> (<?= htmlspecialchars($order['invoice']['status'], ENT_QUOTES) ?>)</span>
+                                <?php $invoiceStatus = $order['invoice']['status'] ?? ''; ?>
+                                <?php $invoiceStatusLabel = $statusLabels[$invoiceStatus] ?? $invoiceStatus; ?>
+                                <span class="inline-flex rounded bg-emerald-50 px-2 py-1 text-emerald-700 text-xs font-semibold"><?= htmlspecialchars($order['invoice']['invoice_no'], ENT_QUOTES) ?> (<?= htmlspecialchars($invoiceStatusLabel, ENT_QUOTES) ?>)</span>
                             <?php else: ?>
                                 <form method="POST" action="/invoices/<?= $order['id'] ?>/issue">
                                     <button class="rounded bg-sky-600 px-3 py-1 text-xs font-medium text-white hover:bg-sky-700">Hisob-faktura</button>
@@ -66,11 +81,11 @@
                     <div class="mt-4 flex flex-wrap items-center gap-2">
                         <form method="POST" action="/orders/<?= $order['id'] ?>/status" class="flex items-center gap-2">
                             <select name="status" class="rounded border border-gray-300 px-3 py-1 text-sm">
-                                <option value="scheduled">Scheduled</option>
+                                <option value="scheduled">Rejalashtirilgan</option>
                                 <option value="in_progress">Boshlash</option>
-                                <option value="completed">Tugallandi</option>
-                                <option value="paid">To'landi</option>
-                                <option value="cancelled">Bekor</option>
+                                <option value="completed">Tugallangan</option>
+                                <option value="paid">To'langan</option>
+                                <option value="cancelled">Bekor qilingan</option>
                             </select>
                             <button class="rounded bg-gray-800 px-3 py-1 text-sm font-medium text-white">Holatni yangilash</button>
                         </form>
@@ -87,7 +102,7 @@
                                 <option value="payme">Payme</option>
                                 <option value="click">Click</option>
                             </select>
-                            <input type="text" name="txn_ref" placeholder="Txn #" class="w-32 rounded border border-gray-300 px-2 py-1">
+                            <input type="text" name="txn_ref" placeholder="Tranzaksiya №" class="w-32 rounded border border-gray-300 px-2 py-1">
                             <button class="rounded bg-emerald-600 px-3 py-1 text-sm font-medium text-white hover:bg-emerald-700">To'lov</button>
                         </form>
                     </div>

@@ -2,7 +2,7 @@
 <html lang="uz" class="h-full bg-slate-900">
 <head>
     <meta charset="utf-8">
-    <title>CleanTrack CRM — Login</title>
+    <title>CleanTrack CRM — Kirish</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/assets/css/tailwind.css">
     <script src="/assets/js/app.js" defer></script>
