@@ -15,4 +15,15 @@ class User extends Model
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ?: null;
     }
+
+    public static function byRoles(array $roles): array
+    {
+        if (empty($roles)) {
+            return [];
+        }
+        $placeholders = implode(',', array_fill(0, count($roles), '?'));
+        $stmt = DB::conn()->prepare("SELECT * FROM users WHERE role IN ($placeholders) ORDER BY name");
+        $stmt->execute($roles);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 }

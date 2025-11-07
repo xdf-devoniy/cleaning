@@ -11,17 +11,35 @@
 <nav class="bg-white shadow">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="flex h-16 items-center justify-between">
-            <div class="flex items-center space-x-4">
+            <div class="flex items-center space-x-6">
                 <span class="text-lg font-semibold text-sky-600">CleanTrack CRM</span>
                 <a href="/" class="text-sm font-medium text-gray-600 hover:text-gray-900">Dashboard</a>
+                <a href="/clients" class="text-sm font-medium text-gray-600 hover:text-gray-900">Mijozlar</a>
+                <a href="/orders" class="text-sm font-medium text-gray-600 hover:text-gray-900">Buyurtmalar</a>
+                <a href="/payroll" class="text-sm font-medium text-gray-600 hover:text-gray-900">Payroll</a>
             </div>
-            <form method="POST" action="/logout">
-                <button class="rounded bg-red-500 px-3 py-1 text-sm font-medium text-white hover:bg-red-600">Logout</button>
-            </form>
+            <div class="flex items-center space-x-3 text-sm text-gray-600">
+                <?php if (!empty($authUser)): ?>
+                    <span><?= htmlspecialchars($authUser['name'] ?? $authUser['email'] ?? 'Foydalanuvchi', ENT_QUOTES) ?></span>
+                <?php endif; ?>
+                <form method="POST" action="/logout">
+                    <button class="rounded bg-red-500 px-3 py-1 text-sm font-medium text-white hover:bg-red-600">Chiqish</button>
+                </form>
+            </div>
         </div>
     </div>
 </nav>
-<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+<main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 space-y-4">
+    <?php if (!empty($flash['success'])): ?>
+        <div class="rounded border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-700 text-sm">
+            <?= htmlspecialchars($flash['success'], ENT_QUOTES) ?>
+        </div>
+    <?php endif; ?>
+    <?php if (!empty($flash['error'])): ?>
+        <div class="rounded border border-red-200 bg-red-50 px-4 py-3 text-red-700 text-sm">
+            <?= htmlspecialchars($flash['error'], ENT_QUOTES) ?>
+        </div>
+    <?php endif; ?>
     <?= $content ?? '' ?>
 </main>
 </body>

@@ -4,4 +4,5 @@ return [
     'clients.manage' => ['owner', 'manager', 'supervisor'],
     'orders.manage' => ['owner', 'manager', 'supervisor'],
     'finance.manage' => ['owner', 'manager', 'accountant'],
+    'payroll.manage' => ['owner', 'manager', 'accountant'],
 ];

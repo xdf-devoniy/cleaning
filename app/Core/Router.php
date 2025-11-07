@@ -1,6 +1,9 @@
 <?php
 namespace App\Core;
 
+use ReflectionFunction;
+use ReflectionMethod;
+
 class Router
 {
     private array $routes = [];
@@ -14,7 +17,7 @@ class Router
     {
         foreach ($this->routes as [$routeMethod, $routePath, $handler]) {
             if ($this->match($routeMethod, $routePath, $method, $path, $params)) {
-                return $this->invoke($handler, $params);
+                return $this->invoke($handler, $params ?? []);
             }
         }
 
@@ -23,7 +26,7 @@ class Router
 
     private function match(string $routeMethod, string $routePath, string $method, string $path, ?array &$params): bool
     {
-        if ($routeMethod !== $method) {
+        if (strcasecmp($routeMethod, $method) !== 0) {
             return false;
         }
 
@@ -31,9 +34,15 @@ class Router
         if ($pattern === null) {
             return false;
         }
+
         $pattern = '#^' . $pattern . '$#';
         if (preg_match($pattern, $path, $matches)) {
-            $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+            $params = [];
+            foreach ($matches as $key => $value) {
+                if (!is_int($key)) {
+                    $params[$key] = $value;
+                }
+            }
             return true;
         }
 
@@ -45,9 +54,27 @@ class Router
         if (is_array($handler)) {
             [$class, $method] = $handler;
             $instance = new $class();
-            $result = $instance->$method($params);
+            $reflection = new ReflectionMethod($instance, $method);
+            $arguments = [];
+            foreach ($reflection->getParameters() as $parameter) {
+                $name = $parameter->getName();
+                if (array_key_exists($name, $params)) {
+                    $arguments[] = $params[$name];
+                } elseif ($parameter->isDefaultValueAvailable()) {
+                    $arguments[] = $parameter->getDefaultValue();
+                } else {
+                    $arguments[] = null;
+                }
+            }
+            $result = $reflection->invokeArgs($instance, $arguments);
         } else {
-            $result = $handler($params);
+            $reflection = new ReflectionFunction($handler);
+            $arguments = [];
+            foreach ($reflection->getParameters() as $parameter) {
+                $name = $parameter->getName();
+                $arguments[] = $params[$name] ?? null;
+            }
+            $result = $handler(...$arguments);
         }
 
         if ($result instanceof Response) {
