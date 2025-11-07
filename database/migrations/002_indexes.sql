@@ -1,0 +1,14 @@
+BEGIN TRANSACTION;
+CREATE INDEX IF NOT EXISTS idx_orders_client ON orders(client_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_scheduled_at ON orders(scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_assignments_user ON assignments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_received_at ON payments(received_at);
+CREATE INDEX IF NOT EXISTS idx_expenses_paid_at ON expenses(paid_at);
+CREATE INDEX IF NOT EXISTS idx_payouts_user ON payouts(user_id);
+CREATE INDEX IF NOT EXISTS idx_inventory_txn_item ON inventory_txn(item_id);
+CREATE INDEX IF NOT EXISTS idx_attendance_user_day ON attendance(user_id, day);
+CREATE INDEX IF NOT EXISTS idx_ratings_order ON ratings(order_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+COMMIT;
