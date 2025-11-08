@@ -109,163 +109,292 @@ $sql = 'SELECT * FROM clients';
 if ($where) {
     $sql .= ' WHERE ' . implode(' AND ', $where);
 }
-$sql .= ' ORDER BY created_at DESC LIMIT 100';
+$sql .= ' ORDER BY created_at DESC LIMIT 120';
 $clients = fetch_all($sql, $params);
 $leadStatuses = ['yangi','malakali','taklif','yutildi','yo\'qotildi'];
+$grouped = [];
+foreach ($clients as $client) {
+    $grouped[$client['lead_status']][] = $client;
+}
+$loyaltyBalances = fetch_all('SELECT client_id, SUM(points) AS points FROM loyalty_transactions GROUP BY client_id');
+$loyaltyMap = [];
+foreach ($loyaltyBalances as $row) {
+    $loyaltyMap[$row['client_id']] = (int)$row['points'];
+}
 ?>
-<form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-    <input type="hidden" name="page" value="clients">
-    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" placeholder="Ism yoki email" class="border rounded px-3 py-2">
-    <input type="text" name="tag" value="<?= htmlspecialchars($tag) ?>" placeholder="Teg" class="border rounded px-3 py-2">
-    <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>" placeholder="Telefon" class="border rounded px-3 py-2">
-    <button class="bg-blue-600 text-white rounded px-3 py-2">Qidirish</button>
-</form>
-
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <div>
-        <h2 class="font-semibold mb-3">Yangi mijoz qo'shish</h2>
-        <form method="post" class="space-y-3">
-            <?= csrf_input() ?>
-            <input type="hidden" name="action" value="add_client">
-            <input name="name" class="w-full border rounded px-3 py-2" placeholder="Ism" required>
-            <input name="phone" class="w-full border rounded px-3 py-2" placeholder="Telefon">
-            <input name="email" class="w-full border rounded px-3 py-2" placeholder="Email">
-            <input name="tag" class="w-full border rounded px-3 py-2" placeholder="Teg">
-            <select name="lead_status" class="w-full border rounded px-3 py-2">
-                <?php foreach ($leadStatuses as $status): ?>
-                    <option value="<?= $status ?>"><?= ucfirst($status) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <textarea name="notes" class="w-full border rounded px-3 py-2" placeholder="Izoh"></textarea>
-            <label class="block text-sm">So'nggi faoliyat</label>
-            <input type="date" name="last_activity" class="w-full border rounded px-3 py-2">
-            <button class="bg-emerald-600 text-white rounded px-3 py-2">Saqlash</button>
-        </form>
-
-        <div class="mt-6">
-            <h3 class="font-semibold mb-2">Telefon bo'yicha dublikatlarni birlashtirish</h3>
-            <form method="post" class="flex gap-2">
-                <?= csrf_input() ?>
-                <input type="hidden" name="action" value="merge_duplicates">
-                <input name="phone" placeholder="Telefon" class="border rounded px-3 py-2 flex-1" required>
-                <button class="bg-amber-500 text-white rounded px-3 py-2">Birlashtirish</button>
-            </form>
+<div class="space-y-8 text-slate-800">
+    <form method="get" class="rounded-3xl border border-slate-100 bg-gradient-to-r from-slate-50 via-white to-slate-50 p-6 shadow-lg">
+        <input type="hidden" name="page" value="clients">
+        <div class="grid gap-4 md:grid-cols-4">
+            <div>
+                <label class="text-xs uppercase text-slate-500">Ism yoki email</label>
+                <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-sky-500 focus:outline-none" placeholder="Mijozni toping">
+            </div>
+            <div>
+                <label class="text-xs uppercase text-slate-500">Teg</label>
+                <input type="text" name="tag" value="<?= htmlspecialchars($tag) ?>" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-sky-500 focus:outline-none" placeholder="VIP, corporate...">
+            </div>
+            <div>
+                <label class="text-xs uppercase text-slate-500">Telefon</label>
+                <input type="text" name="phone" value="<?= htmlspecialchars($phone) ?>" class="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm focus:border-sky-500 focus:outline-none" placeholder="998...">
+            </div>
+            <div class="flex items-end">
+                <button class="w-full rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20">Intellektual qidiruv</button>
+            </div>
         </div>
-    </div>
-    <div>
-        <h2 class="font-semibold mb-3">Mijozlar ro'yxati</h2>
-        <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2">
-            <?php foreach ($clients as $client): ?>
-                <details class="border rounded">
-                    <summary class="px-3 py-2 flex justify-between items-center cursor-pointer">
-                        <span>
-                            <span class="font-semibold"><?= htmlspecialchars($client['name']) ?></span>
-                            <span class="text-xs text-slate-500 ml-2"><?= htmlspecialchars($client['lead_status']) ?></span>
-                        </span>
-                        <span class="text-xs text-slate-500"><?= htmlspecialchars($client['phone'] ?? '') ?></span>
-                    </summary>
-                    <div class="px-3 py-4 space-y-4">
-                        <form method="post" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+        <div class="mt-4 flex flex-wrap gap-2 text-xs">
+            <?php foreach ($leadStatuses as $status): ?>
+                <span class="rounded-full border border-slate-200 px-3 py-1 text-slate-500"><?= ucfirst($status) ?></span>
+            <?php endforeach; ?>
+        </div>
+    </form>
+
+    <div class="grid gap-6 xl:grid-cols-[360px,1fr]">
+        <aside class="space-y-6">
+            <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+                <h2 class="text-lg font-semibold text-slate-900">Yangi mijoz qo'shish</h2>
+                <p class="mt-2 text-sm text-slate-500">CRM ichida tafsilotlar, eslatmalar va loyallikni boshqarish.</p>
+                <form method="post" class="mt-4 space-y-3">
+                    <?= csrf_input() ?>
+                    <input type="hidden" name="action" value="add_client">
+                    <input name="name" class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Ism" required>
+                    <div class="grid grid-cols-2 gap-3">
+                        <input name="phone" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Telefon">
+                        <input name="email" class="rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Email">
+                    </div>
+                    <input name="tag" class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Teg">
+                    <select name="lead_status" class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm">
+                        <?php foreach ($leadStatuses as $status): ?>
+                            <option value="<?= $status ?>"><?= ucfirst($status) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <textarea name="notes" class="w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Afzalliklar, talablar" rows="3"></textarea>
+                    <div>
+                        <label class="text-xs uppercase text-slate-500">So'nggi faoliyat</label>
+                        <input type="date" name="last_activity" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm">
+                    </div>
+                    <button class="w-full rounded-2xl bg-emerald-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20">CRMga qo'shish</button>
+                </form>
+            </div>
+
+            <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+                <h3 class="text-base font-semibold text-slate-900">Dublikatlarni boshqarish</h3>
+                <p class="mt-2 text-sm text-slate-500">Telefon raqam orqali avtomatik birlashtirish.</p>
+                <form method="post" class="mt-3 flex gap-2">
+                    <?= csrf_input() ?>
+                    <input type="hidden" name="action" value="merge_duplicates">
+                    <input name="phone" placeholder="Telefon" class="flex-1 rounded-2xl border border-slate-200 px-4 py-2 text-sm" required>
+                    <button class="rounded-2xl bg-amber-500 px-4 py-2 text-sm font-semibold text-white shadow shadow-amber-500/30">Birlashtirish</button>
+                </form>
+            </div>
+
+            <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+                <h3 class="text-base font-semibold text-slate-900">Analitik tezkor ko'rinish</h3>
+                <ul class="mt-3 space-y-2 text-sm text-slate-600">
+                    <li><span class="font-semibold text-slate-900"><?= count($clients) ?></span> ta filtrlangan mijoz</li>
+                    <li><span class="font-semibold text-emerald-600"><?= number_format(array_sum($loyaltyMap)) ?></span> ball yig'ildi</li>
+                    <li><span class="font-semibold text-sky-600"><?= fetch_one('SELECT COUNT(*) AS c FROM clients WHERE lead_status = "taklif"')['c'] ?? 0 ?></span> ta taklif bosqichida</li>
+                </ul>
+            </div>
+        </aside>
+
+        <section class="space-y-6">
+            <div class="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+                <h2 class="text-lg font-semibold text-slate-900">Pipeline ko'rinishi</h2>
+                <div class="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+                    <?php foreach ($leadStatuses as $status):
+                        $column = $grouped[$status] ?? [];
+                        ?>
+                        <div class="flex flex-col rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-sm font-semibold text-slate-700"><?= ucfirst($status) ?></h3>
+                                <span class="rounded-full bg-white px-3 py-1 text-xs text-slate-500"><?= count($column) ?></span>
+                            </div>
+                            <div class="mt-3 space-y-3">
+                                <?php foreach (array_slice($column, 0, 4) as $item): ?>
+                                    <a href="#client-<?= $item['id'] ?>" class="block rounded-2xl bg-white px-3 py-2 text-sm text-slate-600 shadow-sm hover:shadow">
+                                        <span class="block font-semibold text-slate-800"><?= htmlspecialchars($item['name']) ?></span>
+                                        <span class="text-xs text-slate-500"><?= htmlspecialchars($item['phone'] ?? '-') ?></span>
+                                    </a>
+                                <?php endforeach; ?>
+                                <?php if (!$column): ?>
+                                    <p class="text-xs text-slate-400">Bo'sh</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <?php foreach ($clients as $client):
+                    $clientNotes = fetch_all('SELECT * FROM client_notes WHERE client_id = ? ORDER BY created_at DESC', [$client['id']]);
+                    $clientComms = fetch_all('SELECT * FROM communications WHERE client_id = ? ORDER BY occurred_at DESC', [$client['id']]);
+                    $clientDocs = fetch_all('SELECT * FROM client_documents WHERE client_id = ? ORDER BY uploaded_at DESC', [$client['id']]);
+                    $balance = fetch_one('SELECT SUM(t.total) - SUM(t.paid_amount) AS bal FROM (
+                        SELECT i.total AS total, COALESCE((SELECT SUM(amount) FROM invoice_payments WHERE invoice_id = i.id),0) AS paid_amount
+                        FROM invoices i WHERE i.client_id = ?
+                    ) AS t', [$client['id']]);
+                    $loyalty = $loyaltyMap[$client['id']] ?? 0;
+                    ?>
+                    <article id="client-<?= $client['id'] ?>" class="rounded-3xl border border-slate-100 bg-white p-6 shadow-lg">
+                        <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                            <div>
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <h3 class="text-xl font-semibold text-slate-900"><?= htmlspecialchars($client['name']) ?></h3>
+                                    <span class="rounded-full bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-600"><?= htmlspecialchars($client['lead_status']) ?></span>
+                                    <?php if ($client['tag']): ?>
+                                        <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600"><?= htmlspecialchars($client['tag']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <p class="mt-2 text-sm text-slate-500">So'nggi faoliyat: <?= htmlspecialchars($client['last_activity'] ?? 'noma\'lum') ?></p>
+                                <div class="mt-3 flex flex-wrap gap-2 text-xs text-slate-500">
+                                    <span class="rounded-full bg-slate-100 px-3 py-1">Balans: <?= format_currency((float)($balance['bal'] ?? 0)) ?></span>
+                                    <span class="rounded-full bg-slate-100 px-3 py-1">Loyallik: <?= $loyalty ?> ball</span>
+                                    <a href="/index.php?page=client_card&client_id=<?= $client['id'] ?>" class="rounded-full bg-indigo-500/10 px-3 py-1 font-medium text-indigo-600">360° karta</a>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <form method="post" class="hidden" id="delete-client-<?= $client['id'] ?>">
+                                    <?= csrf_input() ?>
+                                    <input type="hidden" name="action" value="delete_client">
+                                    <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
+                                </form>
+                                <button form="delete-client-<?= $client['id'] ?>" onclick="return confirm('O\'chirishni tasdiqlaysizmi?')" class="rounded-2xl bg-rose-500/10 px-4 py-2 text-xs font-semibold text-rose-600">O'chirish</button>
+                            </div>
+                        </div>
+
+                        <form method="post" class="mt-6 grid gap-4 md:grid-cols-2">
                             <?= csrf_input() ?>
                             <input type="hidden" name="action" value="update_client">
                             <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
-                            <input name="name" value="<?= htmlspecialchars($client['name']) ?>" class="border rounded px-3 py-2" placeholder="Ism">
-                            <input name="phone" value="<?= htmlspecialchars($client['phone']) ?>" class="border rounded px-3 py-2" placeholder="Telefon">
-                            <input name="email" value="<?= htmlspecialchars($client['email']) ?>" class="border rounded px-3 py-2" placeholder="Email">
-                            <input name="tag" value="<?= htmlspecialchars($client['tag']) ?>" class="border rounded px-3 py-2" placeholder="Teg">
-                            <select name="lead_status" class="border rounded px-3 py-2">
-                                <?php foreach ($leadStatuses as $status): ?>
-                                    <option value="<?= $status ?>" <?= $client['lead_status'] === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                            <textarea name="notes" class="border rounded px-3 py-2 md:col-span-2" placeholder="Izoh"><?= htmlspecialchars($client['notes']) ?></textarea>
-                            <div class="md:col-span-2 flex gap-2">
-                                <button class="bg-blue-600 text-white px-3 py-2 rounded">Yangilash</button>
-                                <button form="delete-client-<?= $client['id'] ?>" class="bg-rose-500 text-white px-3 py-2 rounded" onclick="return confirm('O\'chirishni tasdiqlaysizmi?')">O'chirish</button>
+                            <div>
+                                <label class="text-xs uppercase text-slate-500">Telefon</label>
+                                <input name="phone" value="<?= htmlspecialchars($client['phone']) ?>" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Telefon">
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase text-slate-500">Email</label>
+                                <input name="email" value="<?= htmlspecialchars($client['email']) ?>" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Email">
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase text-slate-500">Ism</label>
+                                <input name="name" value="<?= htmlspecialchars($client['name']) ?>" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Ism">
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase text-slate-500">Teg</label>
+                                <input name="tag" value="<?= htmlspecialchars($client['tag']) ?>" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" placeholder="Teg">
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase text-slate-500">Lead status</label>
+                                <select name="lead_status" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm">
+                                    <?php foreach ($leadStatuses as $status): ?>
+                                        <option value="<?= $status ?>" <?= $client['lead_status'] === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="text-xs uppercase text-slate-500">Afzalliklar</label>
+                                <textarea name="notes" class="mt-1 w-full rounded-2xl border border-slate-200 px-4 py-2 text-sm" rows="3" placeholder="Afzalliklar, eslatmalar"><?= htmlspecialchars($client['notes']) ?></textarea>
+                            </div>
+                            <div class="md:col-span-2 flex flex-wrap gap-3">
+                                <button class="rounded-2xl bg-sky-500 px-4 py-2 text-xs font-semibold text-white shadow shadow-sky-500/30">Ma'lumotni yangilash</button>
+                                <a href="/index.php?page=jobs&client_id=<?= $client['id'] ?>" class="rounded-2xl bg-emerald-500/10 px-4 py-2 text-xs font-semibold text-emerald-600">Ish rejalashtirish</a>
+                                <a href="/index.php?page=invoices&client_id=<?= $client['id'] ?>" class="rounded-2xl bg-indigo-500/10 px-4 py-2 text-xs font-semibold text-indigo-600">Hisob yaratish</a>
                             </div>
                         </form>
-                        <form id="delete-client-<?= $client['id'] ?>" method="post" class="hidden">
-                            <?= csrf_input() ?>
-                            <input type="hidden" name="action" value="delete_client">
-                            <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
-                        </form>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <h4 class="font-semibold text-sm">Eslatmalar</h4>
-                                <ul class="text-sm space-y-2 max-h-40 overflow-y-auto">
-                                    <?php $notes = fetch_all('SELECT * FROM client_notes WHERE client_id = ? ORDER BY created_at DESC', [$client['id']]); ?>
-                                    <?php foreach ($notes as $note): ?>
-                                        <li class="border rounded px-2 py-1">
+                        <div class="mt-6 grid gap-6 lg:grid-cols-3">
+                            <section class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-sm font-semibold text-slate-800">Eslatmalar</h4>
+                                    <span class="text-xs text-slate-400"><?= count($clientNotes) ?> ta</span>
+                                </div>
+                                <ul class="space-y-2 text-sm text-slate-600 max-h-48 overflow-y-auto">
+                                    <?php foreach ($clientNotes as $note): ?>
+                                        <li class="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
                                             <p><?= htmlspecialchars($note['note']) ?></p>
-                                            <p class="text-xs text-slate-500"><?= htmlspecialchars($note['reminder_at']) ?></p>
+                                            <p class="text-xs text-slate-400"><?= htmlspecialchars($note['reminder_at']) ?></p>
                                         </li>
                                     <?php endforeach; ?>
+                                    <?php if (!$clientNotes): ?>
+                                        <li class="text-xs text-slate-400">Eslatma yo'q</li>
+                                    <?php endif; ?>
                                 </ul>
-                                <form method="post" class="mt-2 space-y-2">
+                                <form method="post" class="space-y-2">
                                     <?= csrf_input() ?>
                                     <input type="hidden" name="action" value="add_note">
                                     <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
-                                    <textarea name="note" class="border rounded px-2 py-1 w-full" placeholder="Yangi eslatma"></textarea>
-                                    <input type="date" name="reminder_at" class="border rounded px-2 py-1 w-full">
-                                    <button class="bg-emerald-500 text-white px-3 py-1 rounded">Qo'shish</button>
+                                    <textarea name="note" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm" placeholder="Yangi eslatma"></textarea>
+                                    <input type="date" name="reminder_at" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                                    <button class="rounded-2xl bg-emerald-500 px-4 py-2 text-xs font-semibold text-white">Qo'shish</button>
                                 </form>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-sm">Aloqa loglari</h4>
-                                <ul class="text-sm space-y-2 max-h-40 overflow-y-auto">
-                                    <?php $comms = fetch_all('SELECT * FROM communications WHERE client_id = ? ORDER BY occurred_at DESC', [$client['id']]); ?>
-                                    <?php foreach ($comms as $comm): ?>
-                                        <li class="border rounded px-2 py-1">
-                                            <p class="font-semibold"><?= htmlspecialchars($comm['channel']) ?></p>
+                            </section>
+
+                            <section class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-sm font-semibold text-slate-800">Aloqa loglari</h4>
+                                    <span class="text-xs text-slate-400"><?= count($clientComms) ?> ta</span>
+                                </div>
+                                <ul class="space-y-2 text-sm text-slate-600 max-h-48 overflow-y-auto">
+                                    <?php foreach ($clientComms as $comm): ?>
+                                        <li class="rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
+                                            <p class="font-semibold text-slate-700"><?= htmlspecialchars($comm['channel']) ?></p>
                                             <p><?= htmlspecialchars($comm['summary']) ?></p>
-                                            <p class="text-xs text-slate-500"><?= htmlspecialchars($comm['occurred_at']) ?></p>
+                                            <p class="text-xs text-slate-400"><?= htmlspecialchars($comm['occurred_at']) ?></p>
                                         </li>
                                     <?php endforeach; ?>
+                                    <?php if (!$clientComms): ?>
+                                        <li class="text-xs text-slate-400">Aloqa yozuvi yo'q</li>
+                                    <?php endif; ?>
                                 </ul>
-                                <form method="post" class="mt-2 space-y-2">
+                                <form method="post" class="space-y-2">
                                     <?= csrf_input() ?>
                                     <input type="hidden" name="action" value="add_comm">
                                     <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
-                                    <select name="channel" class="border rounded px-2 py-1 w-full">
+                                    <select name="channel" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
                                         <option>Qo'ng'iroq</option>
                                         <option>Telegram</option>
                                         <option>WhatsApp</option>
                                         <option>SMS</option>
                                     </select>
-                                    <textarea name="summary" class="border rounded px-2 py-1 w-full" placeholder="Qisqa mazmun"></textarea>
-                                    <input type="datetime-local" name="occurred_at" class="border rounded px-2 py-1 w-full">
-                                    <button class="bg-indigo-500 text-white px-3 py-1 rounded">Yozib qo'yish</button>
+                                    <textarea name="summary" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm" placeholder="Qisqa mazmun"></textarea>
+                                    <input type="datetime-local" name="occurred_at" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                                    <button class="rounded-2xl bg-indigo-500 px-4 py-2 text-xs font-semibold text-white">Yozib qo'yish</button>
                                 </form>
-                            </div>
-                        </div>
+                            </section>
 
-                        <div>
-                            <h4 class="font-semibold text-sm">Fayllar</h4>
-                            <ul class="text-sm space-y-1">
-                                <?php $docs = fetch_all('SELECT * FROM client_documents WHERE client_id = ? ORDER BY uploaded_at DESC', [$client['id']]); ?>
-                                <?php foreach ($docs as $doc): ?>
-                                    <li>
-                                        <a class="text-blue-600 underline" href="/<?= htmlspecialchars($doc['path']) ?>" target="_blank"><?= htmlspecialchars($doc['description'] ?: $doc['path']) ?></a>
-                                        <span class="text-xs text-slate-500 ml-2"><?= htmlspecialchars($doc['uploaded_at']) ?></span>
-                                    </li>
-                                <?php endforeach; ?>
-                            </ul>
-                            <form method="post" enctype="multipart/form-data" class="mt-2 flex gap-2 items-center">
-                                <?= csrf_input() ?>
-                                <input type="hidden" name="action" value="upload_doc">
-                                <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
-                                <input type="file" name="document" class="text-sm">
-                                <input type="text" name="description" placeholder="Izoh" class="border rounded px-2 py-1">
-                                <button class="bg-slate-700 text-white px-3 py-1 rounded">Yuklash</button>
-                            </form>
+                            <section class="space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <h4 class="text-sm font-semibold text-slate-800">Fayl xotirasi</h4>
+                                    <span class="text-xs text-slate-400"><?= count($clientDocs) ?> ta</span>
+                                </div>
+                                <ul class="space-y-2 text-sm text-slate-600 max-h-48 overflow-y-auto">
+                                    <?php foreach ($clientDocs as $doc): ?>
+                                        <li class="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-3 py-2">
+                                            <a class="truncate text-sky-600 hover:underline" href="/<?= htmlspecialchars($doc['path']) ?>" target="_blank"><?= htmlspecialchars($doc['description'] ?: $doc['path']) ?></a>
+                                            <span class="text-xs text-slate-400"><?= htmlspecialchars($doc['uploaded_at']) ?></span>
+                                        </li>
+                                    <?php endforeach; ?>
+                                    <?php if (!$clientDocs): ?>
+                                        <li class="text-xs text-slate-400">Fayl yuklanmagan</li>
+                                    <?php endif; ?>
+                                </ul>
+                                <form method="post" enctype="multipart/form-data" class="space-y-2">
+                                    <?= csrf_input() ?>
+                                    <input type="hidden" name="action" value="upload_doc">
+                                    <input type="hidden" name="client_id" value="<?= $client['id'] ?>">
+                                    <input type="file" name="document" class="w-full text-sm text-slate-600">
+                                    <input type="text" name="description" placeholder="Izoh" class="w-full rounded-2xl border border-slate-200 px-3 py-2 text-sm">
+                                    <button class="rounded-2xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">Yuklash</button>
+                                </form>
+                            </section>
                         </div>
-                    </div>
-                </details>
-            <?php endforeach; ?>
-            <?php if (!$clients): ?>
-                <p class="text-sm text-slate-500">Mijoz topilmadi</p>
-            <?php endif; ?>
-        </div>
+                    </article>
+                <?php endforeach; ?>
+                <?php if (!$clients): ?>
+                    <p class="rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">Mijoz topilmadi</p>
+                <?php endif; ?>
+            </div>
+        </section>
     </div>
 </div>
