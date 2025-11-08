@@ -3,6 +3,16 @@
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/csrf.php';
 
+if (!function_exists('str_starts_with')) {
+    function str_starts_with(string $haystack, string $needle): bool
+    {
+        if ($needle === '') {
+            return true;
+        }
+        return strncmp($haystack, $needle, strlen($needle)) === 0;
+    }
+}
+
 function input(string $key, $default = null)
 {
     return $_POST[$key] ?? $_GET[$key] ?? $default;
@@ -20,19 +30,34 @@ function flash(string $key, ?string $message = null)
 }
 
 function app_url(string $path = ''): string {
-    $script = $_SERVER['SCRIPT_NAME'] ?? '/public/index.php';
-    $base = rtrim(str_replace('\\', '/', dirname($script)), '/');
-    if ($base === '' || $base === '.') {
-        $base = '';
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $scriptDir = trim(strtr(dirname($script), '\\', '/'), '/');
+
+    if ($scriptDir === '' || $scriptDir === '.') {
+        $scriptFile = $_SERVER['SCRIPT_FILENAME'] ?? '';
+        $docRoot = $_SERVER['DOCUMENT_ROOT'] ?? '';
+        if ($scriptFile && $docRoot) {
+            $relativePath = str_replace($docRoot, '', $scriptFile);
+            $relative = strtr($relativePath, '\\', '/');
+            $relativeDir = trim(dirname($relative), '/');
+            if ($relativeDir !== '.' && $relativeDir !== '') {
+                $scriptDir = $relativeDir;
+            }
+        }
     }
+
     $path = ltrim($path, '/');
+    $base = $scriptDir !== '' ? '/' . $scriptDir : '';
+
     if ($path === '') {
-        return ($base ? $base . '/' : '/') . 'index.php';
+        return ($base ?: '/') . 'index.php';
     }
+
     if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
         return $path;
     }
-    $prefix = $base ? $base . '/' : '/';
+
+    $prefix = $base !== '' ? $base . '/' : '/';
     return $prefix . $path;
 }
 
