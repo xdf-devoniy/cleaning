@@ -19,8 +19,29 @@ function flash(string $key, ?string $message = null)
     $_SESSION['flash'][$key] = $message;
 }
 
+function app_url(string $path = ''): string {
+    $script = $_SERVER['SCRIPT_NAME'] ?? '/public/index.php';
+    $base = rtrim(str_replace('\\', '/', dirname($script)), '/');
+    if ($base === '' || $base === '.') {
+        $base = '';
+    }
+    $path = ltrim($path, '/');
+    if ($path === '') {
+        return ($base ? $base . '/' : '/') . 'index.php';
+    }
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        return $path;
+    }
+    $prefix = $base ? $base . '/' : '/';
+    return $prefix . $path;
+}
+
 function redirect(string $path): void {
-    header('Location: ' . $path);
+    if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+        header('Location: ' . $path);
+    } else {
+        header('Location: ' . app_url($path));
+    }
     exit;
 }
 

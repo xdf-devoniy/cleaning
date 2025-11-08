@@ -57,7 +57,7 @@ $openJobs = array_filter($jobs, fn($job) => in_array($job['status'], ['new','sch
             <div class="flex gap-3">
                 <button class="rounded-2xl bg-sky-500 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20">Profilni yuklash</button>
                 <?php if ($client): ?>
-                    <a href="/index.php?page=clients&search=<?= urlencode($client['name']) ?>" class="rounded-2xl bg-slate-900/5 px-4 py-3 text-sm font-semibold text-slate-600">CRMga qaytish</a>
+                    <a href="<?= htmlspecialchars(app_url('index.php?page=clients&search=' . urlencode($client['name']))) ?>" class="rounded-2xl bg-slate-900/5 px-4 py-3 text-sm font-semibold text-slate-600">CRMga qaytish</a>
                 <?php endif; ?>
             </div>
         </div>
@@ -178,8 +178,8 @@ $openJobs = array_filter($jobs, fn($job) => in_array($job['status'], ['new','sch
                                         <p class="text-xs text-slate-500">Status: <?= htmlspecialchars($job['status']) ?> • Brigada: <?= htmlspecialchars($job['crew'] ?? '-') ?></p>
                                     </div>
                                     <div class="flex gap-2">
-                                        <a class="rounded-2xl bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-600" href="/index.php?page=jobs&focus=<?= $job['id'] ?>">Jadval</a>
-                                        <a class="rounded-2xl bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600" href="/index.php?page=invoices&client_id=<?= $clientId ?>">Invoys</a>
+                                        <a class="rounded-2xl bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-600" href="<?= htmlspecialchars(app_url('index.php?page=jobs&date=' . date('Y-m-d', strtotime($job['scheduled_at'] ?? 'now')) . '&focus=' . $job['id'])) ?>#job-<?= $job['id'] ?>">Jadval</a>
+                                        <a class="rounded-2xl bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600" href="<?= htmlspecialchars(app_url('index.php?page=jobs&date=' . date('Y-m-d', strtotime($job['scheduled_at'] ?? 'now')) . '&focus=' . $job['id'])) ?>#job-<?= $job['id'] ?>">To'lov</a>
                                     </div>
                                 </div>
                             </div>

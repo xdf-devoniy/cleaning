@@ -25,7 +25,7 @@ if (is_post() && isset($_POST['action']) && $_POST['action'] === 'login') {
 
 $user = current_user();
 $page = $_GET['page'] ?? 'dashboard';
-$allowedPages = ['dashboard','clients','client_card','loyalty','invoices','jobs','checklists','inventory','hr','services','portal','communications','reports','settings'];
+$allowedPages = ['dashboard','clients','client_card','loyalty','jobs','checklists','inventory','hr','services','portal','communications','reports','settings'];
 if (!in_array($page, $allowedPages, true)) {
     $page = 'dashboard';
 }
@@ -33,9 +33,9 @@ if (!in_array($page, $allowedPages, true)) {
 if ($user) {
     $navMetrics = [
         'clients' => (int)(fetch_one('SELECT COUNT(*) AS total FROM clients')['total'] ?? 0),
-        'invoices' => (int)(fetch_one('SELECT COUNT(*) AS due FROM invoices WHERE status != "paid"')['due'] ?? 0),
         'jobs' => (int)(fetch_one('SELECT COUNT(*) AS scheduled FROM jobs WHERE DATE(scheduled_at) = DATE("now")')['scheduled'] ?? 0),
         'communications' => (int)(fetch_one('SELECT COUNT(*) AS new_msgs FROM communications WHERE DATE(occurred_at) = DATE("now")')['new_msgs'] ?? 0),
+        'payments' => (int)(fetch_one('SELECT COUNT(*) AS awaiting FROM job_financials WHERE status = "awaiting"')['awaiting'] ?? 0),
     ];
     $auditTotalRow = fetch_one('SELECT COUNT(*) AS c FROM audit_logs');
     $auditTotal = (int)($auditTotalRow['c'] ?? 0);
@@ -95,7 +95,7 @@ if ($user) {
                     <p class="text-sm uppercase tracking-wide text-slate-400"><?= roles()[$user['role']] ?? $user['role'] ?></p>
                     <p class="text-xl font-semibold text-white"><?= htmlspecialchars($user['username']) ?></p>
                 </div>
-                <a href="?logout=1" class="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-rose-500/30">
+                <a href="<?= htmlspecialchars(app_url('index.php?logout=1')) ?>" class="inline-flex items-center gap-2 rounded-xl bg-rose-500 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-rose-500/30">
                     <span>Chiqish</span>
                 </a>
             </div>
@@ -156,7 +156,6 @@ if ($user) {
                     ['key' => 'clients', 'label' => 'Mijozlar', 'icon' => '<path d="M16 7a4 4 0 1 0-8 0 4 4 0 0 0 8 0Zm-4 6c-4.418 0-8 2.686-8 6v1h16v-1c0-3.314-3.582-6-8-6Z" stroke-width="1.6"/>'],
                     ['key' => 'client_card', 'label' => 'Mijoz kartasi', 'icon' => '<path d="M5 5h14v14H5z M5 11h14" stroke-width="1.6"/>'],
                     ['key' => 'loyalty', 'label' => 'Loyallik', 'icon' => '<path d="M12 21c-4-3.5-7-6.167-7-9.5A4.5 4.5 0 0 1 9.5 7a4.3 4.3 0 0 1 2.5.8A4.3 4.3 0 0 1 14.5 7 4.5 4.5 0 0 1 19 11.5C19 14.833 16 17.5 12 21Z" stroke-width="1.6"/>'],
-                    ['key' => 'invoices', 'label' => 'Hisob-fakturalar', 'icon' => '<path d="M7 3h10l2 3v14H5V3h2Zm0 5h10M9 13h6" stroke-width="1.6"/>'],
                     ['key' => 'jobs', 'label' => 'Ish rejalashtirish', 'icon' => '<path d="M5 5h14v14H5z M9 3v4m6-4v4M9 13h6" stroke-width="1.6"/>'],
                     ['key' => 'checklists', 'label' => 'QC', 'icon' => '<path d="M9 11l2 2 4-4m-4-6h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2" stroke-width="1.6"/>'],
                     ['key' => 'inventory', 'label' => 'Inventar', 'icon' => '<path d="M4 7h16v12H4z M4 7l4-4h8l4 4" stroke-width="1.6"/>'],
@@ -173,7 +172,7 @@ if ($user) {
                         $isActive = $page === $item['key'];
                         $metric = $navMetrics[$item['key']] ?? null;
                         ?>
-                        <a href="?page=<?= $item['key'] ?>" class="group flex items-center justify-between rounded-2xl border border-white/5 px-4 py-3 transition-all <?= $isActive ? 'bg-sky-500/20 text-white shadow-glow' : 'hover:bg-white/5 text-slate-300' ?>">
+                        <a href="<?= htmlspecialchars(app_url('index.php?page=' . $item['key'])) ?>" class="group flex items-center justify-between rounded-2xl border border-white/5 px-4 py-3 transition-all <?= $isActive ? 'bg-sky-500/20 text-white shadow-glow' : 'hover:bg-white/5 text-slate-300' ?>">
                             <span class="flex items-center gap-3">
                                 <span class="grid h-10 w-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-slate-200">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" class="h-5 w-5">
@@ -193,7 +192,7 @@ if ($user) {
                 <div class="mt-6 rounded-2xl border border-sky-500/30 bg-sky-500/10 p-4 text-xs text-sky-100">
                     <p class="font-semibold text-sm">Tezkor ko'rsatkichlar</p>
                     <p class="mt-1 text-slate-200">Bugungi jadval: <?= (int)($navMetrics['jobs'] ?? 0) ?> ta ish</p>
-                    <p class="text-slate-300">To'lanmagan invoyslar: <?= (int)($navMetrics['invoices'] ?? 0) ?></p>
+                    <p class="text-slate-300">To'lov kutilmoqda: <?= (int)($navMetrics['payments'] ?? 0) ?> ta ish</p>
                 </div>
             </aside>
             <main class="flex-1">
@@ -209,9 +208,9 @@ if ($user) {
                             </form>
                             <div class="hidden h-10 w-px bg-white/5 md:block"></div>
                             <div class="flex flex-wrap gap-3">
-                                <a href="/index.php?page=jobs" class="rounded-2xl bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-100 shadow-lg shadow-emerald-500/20">Yangi ish</a>
-                                <a href="/index.php?page=invoices" class="rounded-2xl bg-indigo-500/20 px-4 py-2 text-sm font-medium text-indigo-100 shadow-lg shadow-indigo-500/20">Yangi invoys</a>
-                                <a href="/index.php?page=clients" class="rounded-2xl bg-sky-500/20 px-4 py-2 text-sm font-medium text-sky-100 shadow-lg shadow-sky-500/20">Yangi mijoz</a>
+                                <a href="<?= htmlspecialchars(app_url('index.php?page=jobs&date=' . date('Y-m-d') . '#new-job')) ?>" class="rounded-2xl bg-emerald-500/20 px-4 py-2 text-sm font-medium text-emerald-100 shadow-lg shadow-emerald-500/20">Yangi ish</a>
+                                <a href="<?= htmlspecialchars(app_url('index.php?page=jobs&date=' . date('Y-m-d'))) ?>" class="rounded-2xl bg-indigo-500/20 px-4 py-2 text-sm font-medium text-indigo-100 shadow-lg shadow-indigo-500/20">To'lov nazorati</a>
+                                <a href="<?= htmlspecialchars(app_url('index.php?page=clients')) ?>" class="rounded-2xl bg-sky-500/20 px-4 py-2 text-sm font-medium text-sky-100 shadow-lg shadow-sky-500/20">Yangi mijoz</a>
                             </div>
                         </div>
                         <div class="flex flex-wrap items-center gap-3">

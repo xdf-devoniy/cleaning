@@ -146,8 +146,9 @@ $onTimeRate = $completed30 ? round(($onTime / $completed30) * 100, 1) : 0;
                         </div>
                         <p class="text-xs text-slate-500 mt-1"><?= htmlspecialchars($job['scheduled_at']) ?> • <?= htmlspecialchars($job['service_name'] ?? 'Xizmat') ?></p>
                         <div class="mt-3 flex gap-2">
-                            <a class="rounded-xl bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700" href="/index.php?page=jobs&focus=<?= $job['id'] ?>">Jadval</a>
-                            <a class="rounded-xl bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700" href="/index.php?page=invoices&client_id=<?= $job['client_id'] ?>">Invoys</a>
+                            <?php $jobDate = date('Y-m-d', strtotime($job['scheduled_at'] ?? 'now')); ?>
+                            <a class="rounded-xl bg-sky-500/10 px-3 py-1 text-xs font-medium text-sky-700" href="<?= htmlspecialchars(app_url('index.php?page=jobs&date=' . $jobDate . '&focus=' . $job['id'])) ?>#job-<?= $job['id'] ?>">Jadval</a>
+                            <a class="rounded-xl bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700" href="<?= htmlspecialchars(app_url('index.php?page=jobs&date=' . $jobDate . '&focus=' . $job['id'])) ?>#job-<?= $job['id'] ?>">To'lov</a>
                         </div>
                     </li>
                 <?php endforeach; ?>

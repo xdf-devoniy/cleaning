@@ -175,6 +175,36 @@ CREATE TABLE IF NOT EXISTS jobs (
     FOREIGN KEY(service_id) REFERENCES services(id)
 );
 
+CREATE TABLE IF NOT EXISTS job_progress (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER NOT NULL,
+    stage TEXT NOT NULL,
+    happened_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    note TEXT,
+    created_by INTEGER,
+    FOREIGN KEY(job_id) REFERENCES jobs(id),
+    FOREIGN KEY(created_by) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS job_financials (
+    job_id INTEGER PRIMARY KEY,
+    amount REAL DEFAULT 0,
+    due_date TEXT,
+    status TEXT DEFAULT 'awaiting',
+    paid_at TEXT,
+    FOREIGN KEY(job_id) REFERENCES jobs(id)
+);
+
+CREATE TABLE IF NOT EXISTS job_financial_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id INTEGER,
+    amount REAL,
+    status TEXT,
+    note TEXT,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(job_id) REFERENCES jobs(id)
+);
+
 CREATE TABLE IF NOT EXISTS job_photos (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     job_id INTEGER,
