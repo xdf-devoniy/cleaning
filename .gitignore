@@ -1,0 +1,7 @@
+vendor/
+*.log
+*.sqlite
+uploads/*
+!uploads/.gitkeep
+.DS_Store
+.env
